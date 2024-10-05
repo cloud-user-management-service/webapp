@@ -1,0 +1,126 @@
+package com.myweb.webapp.service.impl;
+
+import java.time.LocalDateTime;
+
+import java.util.Map;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import com.myweb.webapp.dto.UserRequestDto;
+import com.myweb.webapp.entity.User;
+import com.myweb.webapp.exceptions.DatabaseAccessException;
+import com.myweb.webapp.exceptions.EmailExistsException;
+import com.myweb.webapp.repository.UserRepository;
+import com.myweb.webapp.service.UserService;
+
+import com.myweb.webapp.exceptions.ParamException;
+import lombok.extern.log4j.Log4j2;
+
+@Service
+@Log4j2
+public class UserServiceImpl implements UserService {
+    private UserRepository userRepo;
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    public UserServiceImpl(UserRepository userRepo, PasswordEncoder passwordEncoder) {
+        this.userRepo = userRepo;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    @Override
+    public User createUser(Map<String, Object> userRequest) {
+        validateUserRequestDto(userRequest);
+
+        try {
+            // Check if user with email already exists
+            User existingUser = userRepo.findByEmail((String) userRequest.get("email"));
+
+            if (existingUser != null) {
+                // If the email already exists, throw a custom exception
+                throw new EmailExistsException();
+            }
+        } catch (DataAccessException e) {
+            log.error("Database error when searching for existing email: {}", e.getMessage());
+            throw new DatabaseAccessException();
+        }
+
+        User user = new User();
+        user.setEmail((String) userRequest.get("email"));
+        user.setFirstName((String) userRequest.get("first_name"));
+        user.setLastName((String) userRequest.get("last_name"));
+        user.setPassword(passwordEncoder.encode((String) userRequest.get("password")));
+        user.setAccountCreated(LocalDateTime.now());
+        user.setAccountUpdated(LocalDateTime.now());
+
+        try {
+            return userRepo.save(user);
+        } catch (DataAccessException e) {
+            log.error("Database error when saving user: {}", e.getMessage());
+            throw new DatabaseAccessException();
+        }
+    }
+
+    public ResponseEntity updateUser(Map<String, Object> userUpdateRequest, User currentUser) {
+        // Update allowed fields only and set the updated flag to false
+        boolean updated = false;
+
+        if (userUpdateRequest.containsKey("firstName")) {
+            Object firstName = userUpdateRequest.get("firstName");
+            if (firstName instanceof String) {
+                currentUser.setFirstName((String) firstName);
+                updated = true;
+            }
+        }
+
+        if (userUpdateRequest.containsKey("lastName")) {
+            Object lastName = userUpdateRequest.get("lastName");
+            if (lastName instanceof String) {
+                currentUser.setLastName((String) lastName);
+                updated = true;
+            }
+        }
+
+        if (userUpdateRequest.containsKey("password")) {
+            Object password = userUpdateRequest.get("password");
+            if (password instanceof String) {
+                currentUser.setPassword(passwordEncoder.encode((String) password));
+                updated = true;
+            }
+        }
+
+        // If any allowed field was updated, update account_updated and save the user
+        if (updated) {
+            currentUser.setAccountUpdated(LocalDateTime.now());
+            userRepo.save(currentUser);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT); // No content on success
+        }
+
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+
+    }
+
+    private void validateUserRequestDto(Map<String, Object> userRequest) {
+        if (userRequest == null || !userRequest.containsKey("email") || !userRequest.containsKey("first_name")
+                || !userRequest.containsKey("last_name") || !userRequest.containsKey("password")) {
+            throw new ParamException();
+        }
+
+        // check for unexpected fields
+        Set<String> allowedFields = new HashSet<>(Arrays.asList("email", "first_name", "last_name", "password"));
+        for (String key : userRequest.keySet()) {
+            if (!allowedFields.contains(key)) {
+                throw new ParamException();
+            }
+        }
+    }
+
+}
