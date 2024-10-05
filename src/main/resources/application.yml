@@ -1,11 +1,14 @@
 # spring.application.name=sportsceter
 
 server:
-    port: 8080
+    port: 8081
 
 spring:
     config:
         import: optional:file:.env[.properties]
+    sql:
+        init:
+            mode: always
     datasource:
         url: ${DB_URL}
         username: ${DB_USERNAME}
@@ -23,6 +26,8 @@ spring:
             hibernate:
                 dialect: org.hibernate.dialect.MySQLDialect    
                 format_sql: true
-
+    h2:
+        console:
+            enabled: true
     
     

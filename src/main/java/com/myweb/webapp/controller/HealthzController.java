@@ -72,14 +72,4 @@ public class HealthzController {
         return ResponseEntity.ok().build();
     }
 
-    @RequestMapping(method = RequestMethod.HEAD)
-    public ResponseEntity<Void> handleHead() {
-        return new ResponseEntity<>(HttpStatus.METHOD_NOT_ALLOWED);
-    }
-
-    @RequestMapping(method = RequestMethod.OPTIONS)
-    public ResponseEntity<Void> handleOptions() {
-        return new ResponseEntity<>(HttpStatus.METHOD_NOT_ALLOWED);
-    }
-
 }
