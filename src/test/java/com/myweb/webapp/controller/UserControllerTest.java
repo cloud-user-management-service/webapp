@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.web.servlet.MockMvc;
@@ -32,6 +33,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.myweb.webapp.config.PasswordEncoderConfig;
+import com.myweb.webapp.config.RestAuthenticationEntryPoint;
 import com.myweb.webapp.config.SecurityConfig;
 import com.myweb.webapp.dto.CustomUserDetails;
 import com.myweb.webapp.dto.UserRequestDto;
@@ -56,29 +58,25 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import java.util.Base64;
 import java.nio.charset.StandardCharsets;
 
-// @WebMvcTest(UserController.class)
-@SpringBootTest
-@AutoConfigureMockMvc
-@Import(SecurityConfig.class)
-class UserServiceImplTest {
+@WebMvcTest(UserController.class)
+@AutoConfigureMockMvc(addFilters = false) // Do not add the security filters
+class UserControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private UserService userService;
-
-    @Mock
-    private MyUserDetailsService userDetailsService; 
+    @MockBean
+    private PasswordEncoder passwordEncoder;  // Mock the password encoder
+   
+    @MockBean
+    private UserService userService; //Mock the user service
 
     @InjectMocks
     private UserController userController;
 
     private User mockUser;
     private CustomUserDetails mockUserDetails;
+    private String base64Credentials;
 
     @BeforeEach
     public void setUp() {
@@ -92,43 +90,38 @@ class UserServiceImplTest {
         mockUser.setAccountCreated(LocalDateTime.now());
         mockUser.setAccountUpdated(LocalDateTime.now());
 
+        String username = mockUser.getEmail();
+        String password = mockUser.getPassword();
+        String auth = username + ":" + password;
+        base64Credentials = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
 
-        mockUserDetails = new CustomUserDetails(mockUser, mockUser.getPassword());
-
-        when(userDetailsService.loadUserByUsername(mockUser.getEmail()))
-        .thenReturn(mockUserDetails);
-        
+        mockUserDetails = new CustomUserDetails(mockUser,passwordEncoder.encode(mockUser.getPassword()));
     }
 
     @SuppressWarnings("unchecked")
     @Test
     public void testCreateUser() throws Exception {
-        // Mock the service layer
+
         when(userService.createUser(any(Map.class))).thenReturn(mockUser);
 
         mockMvc.perform(post("/v1/user")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"testuserddddds@example.com\", \"first_name\":\"Test\", \"last_name\":\"User\", \"password\":\"password123\"}"))
+                        .content("{\"email\":\"testuser@example.com\", \"first_name\":\"Test\", \"last_name\":\"User\", \"password\":\"password123\"}"))
                 .andExpect(status().isCreated());
     }
 
     @Test
     public void testGetUser_Unauthorized() throws Exception {
+
         mockMvc.perform(get("/v1/user/self"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     public void testGetUser_Success() throws Exception {
-        when(userDetailsService.loadUserByUsername(mockUser.getEmail()))
-            .thenReturn(mockUserDetails);
-
-        String username = mockUser.getEmail();
-        String password = mockUser.getPassword();
-        String auth = username + ":" + password;
-        String base64Credentials = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
 
         mockMvc.perform(get("/v1/user/self")
+                        .requestAttr("userDetails", mockUserDetails) // Adding the mockUserDetails to mock authorized user
                         .header("Authorization", "Basic " + base64Credentials))
                 .andExpect(status().isOk());
     }
@@ -136,12 +129,8 @@ class UserServiceImplTest {
     @Test
     public void testUpdateUser_Success() throws Exception {
 
-        String username = mockUser.getEmail();
-        String password = mockUser.getPassword();
-        String auth = username + ":" + password;
-        String base64Credentials = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
-
         mockMvc.perform(put("/v1/user/self")
+                        .requestAttr("userDetails", mockUserDetails) // Adding the mockUserDetails to mock authorized user
                         .header("Authorization", "Basic " + base64Credentials)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"first_name\":\"NewFirstName\", \"last_name\":\"NewLastName\"}"))
@@ -150,9 +139,6 @@ class UserServiceImplTest {
 
     @Test
     public void testUpdateUser_UnauthorizedField() throws Exception {
-        String username = mockUser.getEmail();
-        String auth = username + ":" + "wrongpassword";
-        String base64Credentials = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
 
         mockMvc.perform(put("/v1/user/self")
                         .header("Authorization", "Basic " + base64Credentials)
@@ -164,13 +150,8 @@ class UserServiceImplTest {
     @Test
     public void testUpdateUser_BadRequest() throws Exception {
 
-        String username = mockUser.getEmail();
-        String password = mockUser.getPassword();
-        String auth = username + ":" + password;
-        String base64Credentials = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
-
-        // Perform PUT request
         mockMvc.perform(put("/v1/user/self")
+                        .requestAttr("userDetails", mockUserDetails) // Adding the mockUserDetails to mock authorized user
                         .header("Authorization", "Basic " + base64Credentials)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"first_name\":\"NewFirstName\", \"last_name\":\"NewLastName\", \"email\":\"update@email\"}"))
