@@ -73,16 +73,16 @@ public class UserServiceImpl implements UserService {
         // Update allowed fields only and set the updated flag to false
         boolean updated = false;
 
-        if (userUpdateRequest.containsKey("firstName")) {
-            Object firstName = userUpdateRequest.get("firstName");
+        if (userUpdateRequest.containsKey("first_name")) {
+            Object firstName = userUpdateRequest.get("first_name");
             if (firstName instanceof String) {
                 currentUser.setFirstName((String) firstName);
                 updated = true;
             }
         }
 
-        if (userUpdateRequest.containsKey("lastName")) {
-            Object lastName = userUpdateRequest.get("lastName");
+        if (userUpdateRequest.containsKey("last_name")) {
+            Object lastName = userUpdateRequest.get("last_name");
             if (lastName instanceof String) {
                 currentUser.setLastName((String) lastName);
                 updated = true;
@@ -114,12 +114,24 @@ public class UserServiceImpl implements UserService {
             throw new ParamException();
         }
 
-        // check for unexpected fields
+        // Check for unexpected fields
         Set<String> allowedFields = new HashSet<>(Arrays.asList("email", "first_name", "last_name", "password"));
         for (String key : userRequest.keySet()) {
             if (!allowedFields.contains(key)) {
                 throw new ParamException();
             }
+        }
+
+        // Validate email format
+        String email = (String) userRequest.get("email");
+        if (email == null || !email.contains("@")) {
+            throw new ParamException();
+        }
+
+        // Validate password
+        String password = (String) userRequest.get("password");
+        if (password == null || password.isEmpty()) {
+            throw new ParamException();
         }
     }
 

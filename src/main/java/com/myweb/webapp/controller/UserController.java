@@ -85,6 +85,10 @@ public class UserController {
     public ResponseEntity updateUser(@RequestBody Map<String, Object> userUpdateRequest, HttpServletRequest request) {
         UserDetails userDetails = (UserDetails) request.getAttribute("userDetails");
 
+        if (userDetails == null) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
         // Allowed fields
         String[] allowedFields = { "first_name", "last_name", "password" };
 
