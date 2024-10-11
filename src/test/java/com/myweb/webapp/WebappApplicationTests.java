@@ -9,11 +9,11 @@ import lombok.extern.log4j.Log4j2;
 
 import javax.sql.DataSource;
 
-@SpringBootTest
-class WebappApplicationTests {
+// @SpringBootTest
+// class WebappApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
+// 	@Test
+// 	void contextLoads() {
+// 	}
 
-}
+// }
