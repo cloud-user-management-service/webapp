@@ -1,0 +1,50 @@
+name: Packer Test
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  packer-check:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+          
+      - name: Build and test with Maven
+        run: mvn --batch-mode package
+
+      - name: Install Packer
+        uses: hashicorp/setup-packer@main
+        with:
+          version: latest
+
+      - name: init packer
+        run: |
+          cd packer
+          packer init .
+        continue-on-error: false
+         
+      - name: Packer format check
+        run: |
+          cd packer
+          packer fmt -check -diff .
+        continue-on-error: false
+        #   packer fmt -check=true .
+    
+      - name: Packer validate check
+        run: |
+          cd packer
+          packer validate .
+        continue-on-error: false  
+        #   packer validate ami.us-west-2.pkl.hcl
