@@ -86,7 +86,7 @@ variable "mysql_password" {
 
 source "amazon-ebs" "my-ami" {
   region          = "${var.aws_region}"
-  ami_name        = "csye6225_f24_webapp_${formatdate("YYYY_MM_DD", timestamp())}"
+  ami_name        = "csye6225_f24_webapp_${formatdate("YYYY_MM_DD_HH_mm_ss", timestamp())}"
   ami_description = "AMI for CSYE6225"
 
   ami_regions = [
