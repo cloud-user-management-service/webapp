@@ -41,8 +41,12 @@ echo "install Maven..."
 sudo apt-get install maven -y
 
 # install MySQL
-echo "install MySQL..."
+sudo apt-get update
 sudo apt-get install mysql-server -y
+
+# Start MySQL service
+sudo systemctl start mysql
+sleep 5
 
 # set MySQL root username and psaaword
 echo "setting MySQL..."
@@ -52,10 +56,17 @@ FLUSH PRIVILEGES;
 CREATE DATABASE $DB_NAME;
 EOF
 
-# set environment variables
-export DB_URL=$DB_URL
-export DB_USERNAME=$DB_USERNAME
-export DB_PASSWORD=$MYSQL_ROOT_PASSWORD
+# # set environment variables
+# export DB_URL=$DB_URL
+# export DB_USERNAME=$DB_USERNAME
+# export DB_PASSWORD=$MYSQL_ROOT_PASSWORD
+
+
+# Create .env file
+echo "Creating .env file..."
+echo "DB_URL=jdbc:mysql://localhost:3306/$DB_NAME?createDatabaseIfNotExist=true" | sudo tee /opt/myapp/.env
+echo "DB_USERNAME=$DB_USERNAME" | sudo tee -a /opt/myapp/.env
+echo "DB_PASSWORD=$DB_PASSWORD" | sudo tee -a /opt/myapp/.env
 
 # # start MySQL 
 # echo "start MySQL ..."

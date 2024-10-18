@@ -7,7 +7,6 @@ Type=simple
 User=csye6225
 Group=csye6225
 WorkingDirectory=/opt/myapp
-ExecStartPre=/bin/systemctl start mysql
 ExecStart=/usr/bin/java -jar /opt/myapp/webapp.jar
 Restart=always
 RestartSec=3
