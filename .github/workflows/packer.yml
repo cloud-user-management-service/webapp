@@ -1,0 +1,34 @@
+name: Packer Test
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  packer-check:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Install Packer
+        uses: hashicorp/setup-packer@v1
+        with:
+          version: latest
+         
+      - name: Packer format check
+        run: |
+          cd packer
+          packer fmt -check -diff .
+        continue-on-error: false
+        #   packer fmt -check=true .
+    
+      - name: Packer validate check
+        run: |
+          cd packer
+          packer validate .
+        continue-on-error: false  
+        #   packer validate ami.us-west-2.pkl.hcl
