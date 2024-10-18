@@ -18,6 +18,12 @@ jobs:
         uses: hashicorp/setup-packer@main
         with:
           version: latest
+
+      - name: init packer
+        run: |
+          cd packer
+          packer init .
+        continue-on-error: false
          
       - name: Packer format check
         run: |
