@@ -86,10 +86,10 @@ variable "mysql_password" {
 
 source "amazon-ebs" "my-ami" {
     region = "${var.aws_region}"
-    ami_name = "csye6225_f24_webapp_${formatdate("YYY_MM_DD", timestamp())}"
+    ami_name = "csye6225_f24_webapp_${formatdate("YYYY_MM_DD", timestamp())}"
     ami_description = "AMI for CSYE6225"
 
-    ami_region = [
+    ami_regions = [
         "${var.aws_region}",
     ]
 
@@ -104,7 +104,7 @@ source "amazon-ebs" "my-ami" {
     subnet_id = "${var.subnet_id}"
 
     launch_block_device_mappings {
-        deletion_on_termination = true
+        delete_on_termination = true
         device_name = "${var.device_name}"
         volume_size = var.volume_size
         volume_type = var.volume_type
@@ -153,7 +153,7 @@ build {
         script = "appDirSetup.sh"
     }
 
-    provisioner "shell" {
+    provisioner "file" {
         source = "../target/webapp-0.0.1-SNAPSHOT.jar"
         destination = "/tmp/webapp.jar"
     }
@@ -177,10 +177,10 @@ build {
 
     provisioner "shell" {
         environment_vars = [
-            "MYSQL_ROOT_PASSWORD=${var.mysql_root_password}"
-            "DB_NAME=${var.mysql_db_name}"
-            "DB_URL=${var.mysql_url}"
-            "DB_USERNAME=${var.mysql_user_name}"
+            "MYSQL_ROOT_PASSWORD=${var.mysql_root_password}",
+            "DB_NAME=${var.mysql_db_name}",
+            "DB_URL=${var.mysql_url}",
+            "DB_USERNAME=${var.mysql_user_name}",
             "DB_PASSWORD=${var.mysql_password}"
         ]
         script = "dependency.sh"

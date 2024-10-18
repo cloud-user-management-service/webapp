@@ -15,14 +15,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Packer
-        uses: hashicorp/setup-packer@v1
+        uses: hashicorp/setup-packer@main
         with:
           version: latest
          
       - name: Packer format check
         run: |
           cd packer
-          packer fmt -check -diff .
+          packer fmt -check .
         continue-on-error: false
         #   packer fmt -check=true .
     
