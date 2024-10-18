@@ -50,7 +50,7 @@ jobs:
       - name: Build the AMI using Packer
         run: |
           cd packer
-          packer init webapp-ami-us-west-2.pkl.hcl
-          packer build webapp-ami-us-west-2.pkl.hcl
+          packer init webapp-ami-us-west-2.pkr.hcl
+          packer build webapp-ami-us-west-2.pkr.hcl
  
           
