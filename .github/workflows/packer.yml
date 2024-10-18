@@ -22,7 +22,7 @@ jobs:
       - name: Packer format check
         run: |
           cd packer
-          packer fmt -check .
+          packer fmt -check -diff .
         continue-on-error: false
         #   packer fmt -check=true .
     
