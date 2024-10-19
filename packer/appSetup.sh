@@ -1,6 +1,5 @@
 #!/bin/bash
 
-#appSetup.sh
 set -e
 
 sudo cp /tmp/webapp.jar /opt/myapp/webapp.jar
