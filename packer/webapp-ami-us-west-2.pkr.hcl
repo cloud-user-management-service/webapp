@@ -8,12 +8,12 @@ packer {
 }
 
 variable "aws_region" {
-  type = string
+  type    = string
   default = "us-west-2"
 }
 
 variable "source_ami" {
-  type = string
+  type    = string
   default = "ami-04dd23e62ed049936" //Ubuntu24.04 LTS us-west-2
 }
 
