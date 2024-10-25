@@ -8,14 +8,12 @@ packer {
 }
 
 variable "aws_region" {
-  type = string
-  // default = "us-east-1"
+  type    = string
   default = "us-west-2"
 }
 
 variable "source_ami" {
-  type = string
-  // default = "ami-0c55b159cbfafe1f0" //Ubuntu24.04 LTS us-east-1
+  type    = string
   default = "ami-04dd23e62ed049936" //Ubuntu24.04 LTS us-west-2
 }
 
@@ -59,31 +57,6 @@ variable "volume_type" {
   default = "gp2"
 }
 
-variable "mysql_root_password" {
-  type    = string
-  default = "mysql"
-}
-
-variable "mysql_db_name" {
-  type    = string
-  default = "webapp"
-}
-
-variable "mysql_url" {
-  type    = string
-  default = "jdbc:mysql://localhost:3306/webapp"
-}
-
-variable "mysql_user_name" {
-  type    = string
-  default = "root"
-}
-
-variable "mysql_password" {
-  type    = string
-  default = "mysql"
-}
-
 variable "demo_user" {
   type    = string
   default = "977098991229"
@@ -122,35 +95,11 @@ source "amazon-ebs" "my-ami" {
   }
 }
 
-// build {
-//     sources = [
-//         "source.amazon-ebs.my-ami",
-//     ]
-
-//     provisioner "shell" {
-//         environment_vars = [
-//             "DEBIAN_FRONTEND=noninteractive"
-//             "CHECKPOINT_DISABLE=1"
-//         ]
-
-//         inline = [
-//             "sudo apt-get update",
-//             "sudo apt-get upgrade -y",
-//             "sudo apt-get install nginx -y",
-//             "sudo apt-get clean",
-//         ]
-//     }
-// }
-
 build {
   sources = [
     "source.amazon-ebs.my-ami",
   ]
 
-  // #create csye6225 user with no login
-  // provisioner "shell" {
-  //     script = "userSetup.sh"
-  // }
 
   provisioner "shell" {
     script = "updateOs.sh"
@@ -165,16 +114,6 @@ build {
     destination = "/tmp/webapp.jar"
   }
 
-  // provisioner "file" {
-  //     source      = "app.properties"
-  //     destination = "/opt/myapp/app.properties"
-  //     // destination = "/tmp/app.properties"
-  // }
-
-  // provisioner "file" {
-  //     source      = "app"
-  //     destination = "/tmp/app"
-  // }
 
   provisioner "file" {
     source = "app.service"
@@ -183,20 +122,8 @@ build {
   }
 
   provisioner "shell" {
-    environment_vars = [
-      "MYSQL_ROOT_PASSWORD=${var.mysql_root_password}",
-      "DB_NAME=${var.mysql_db_name}",
-      "DB_URL=${var.mysql_url}",
-      "DB_USERNAME=${var.mysql_user_name}",
-      "DB_PASSWORD=${var.mysql_password}"
-    ]
     script = "dependency.sh"
   }
-
-  // provisioner "file" {
-  //     source = "target/webapp.jar" //??
-  //     destination = "/tmp/webapp.jar"//??
-  // }
 
   provisioner "shell" {
     script = "appSetup.sh"
