@@ -31,12 +31,5 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Wait for MySQL to be ready
-        run: |
-          until mysqladmin ping -h "127.0.0.1" --silent; do
-            echo "Waiting for MySQL to be ready..."
-            sleep 2
-          done
-
       - name: Build and test with Maven
         run: mvn --batch-mode package
