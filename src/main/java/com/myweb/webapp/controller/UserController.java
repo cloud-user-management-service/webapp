@@ -3,6 +3,7 @@ package com.myweb.webapp.controller;
 import java.util.Map;
 import java.util.HashMap;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,7 +18,9 @@ import com.myweb.webapp.dto.CustomUserDetails;
 import com.myweb.webapp.dto.UserRequestDto;
 import com.myweb.webapp.dto.UserResponse;
 import com.myweb.webapp.entity.User;
+import com.myweb.webapp.service.MetricsService;
 import com.myweb.webapp.service.UserService;
+import com.myweb.webapp.service.impl.MetricsServiceImpl;
 import com.myweb.webapp.exceptions.HandleBadRequestException;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,13 +33,17 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public class UserController {
     UserService userService;
+    MetricsService metricsService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, MetricsService metricsService) {
         this.userService = userService;
+        this.metricsService = metricsService;
     }
 
     @PostMapping
     public ResponseEntity<UserResponse> createUser(@RequestBody Map<String, Object> userRequest) {
+        long start = System.currentTimeMillis();
+
         User user = userService.createUser(userRequest);
 
         // map user to userResponse
@@ -51,11 +58,16 @@ public class UserController {
         
         log.info("User created with email: {}", user.getEmail());
 
+        long duration = System.currentTimeMillis() - start;
+        metricsService.recordApiCall("create_user", duration);
+
         return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
     }
 
     @GetMapping("/self")
     public ResponseEntity<UserResponse> getUser(HttpServletRequest request) {
+        long start = System.currentTimeMillis();
+
         UserDetails userDetails = (UserDetails) request.getAttribute("userDetails");
 
         if (userDetails == null) {
@@ -75,6 +87,9 @@ public class UserController {
                     user.getAccountCreated(),
                     user.getAccountUpdated());
 
+            long duration = System.currentTimeMillis() - start;
+            metricsService.recordApiCall("get_user", duration);
+
             return new ResponseEntity<>(userResponse, HttpStatus.OK);
         }
 
@@ -83,6 +98,8 @@ public class UserController {
 
     @PutMapping("/self")
     public ResponseEntity updateUser(@RequestBody Map<String, Object> userUpdateRequest, HttpServletRequest request) {
+        long start = System.currentTimeMillis();
+
         UserDetails userDetails = (UserDetails) request.getAttribute("userDetails");
 
         if (userDetails == null) {
@@ -112,6 +129,9 @@ public class UserController {
 
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
+
+        long duration = System.currentTimeMillis() - start;
+        metricsService.recordApiCall("update_user", duration);
 
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 

@@ -30,4 +30,16 @@ spring:
         console:
             enabled: true
     
-    
+logging:
+  level:
+    root: INFO
+    com.tdunning.statsd: INFO
+  file:
+    name: /var/log/statsd/csye6225.log
+
+cloud:
+  aws:
+    region:
+      static: ${AWS_REGION}
+    s3:
+      bucket: ${AWS_BUCKET_NAME}

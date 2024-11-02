@@ -41,14 +41,20 @@ import com.myweb.webapp.entity.User;
 import com.myweb.webapp.exceptions.HandleBadRequestException;
 import com.myweb.webapp.repository.UserRepository;
 import com.myweb.webapp.security.AuthenticationFilter;
+import com.myweb.webapp.service.MetricsService;
 import com.myweb.webapp.service.UserService;
+import com.myweb.webapp.service.impl.MetricsServiceImpl;
 import com.myweb.webapp.service.impl.MyUserDetailsService;
 import com.myweb.webapp.service.impl.UserServiceImpl;
+
+import software.amazon.awssdk.http.nio.netty.internal.http2.MultiplexedChannelRecord.Metrics;
 
 import java.util.HashMap;
 import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import java.util.Optional;
 
@@ -70,6 +76,9 @@ class UserControllerTest {
    
     @MockBean
     private UserService userService; //Mock the user service
+
+    @MockBean
+    private MetricsService metricsService;  //Mock the metrics service
 
     @InjectMocks
     private UserController userController;
@@ -108,6 +117,7 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"testuser@example.com\", \"first_name\":\"Test\", \"last_name\":\"User\", \"password\":\"password123\"}"))
                 .andExpect(status().isCreated());
+        // verify(metricsService).recordApiCall(eq("create_user"), anyLong());
     }
 
     @Test
