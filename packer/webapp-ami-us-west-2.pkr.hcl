@@ -24,7 +24,7 @@ variable "ssh_username" {
 
 variable "subnet_id" {
   type    = string
-  default = "subnet-0627479f71a0d731f"
+  default = "subnet-0627479f71a0d731f" //us-west-2
 }
 
 variable "instance_type" {
@@ -117,16 +117,25 @@ build {
 
   provisioner "file" {
     source = "app.service"
-    // destination = "/etc/systemd/system/csye6225.service"
     destination = "/tmp/app.service"
+  }
+
+  provisioner "file" {
+    source = "cloundWatchAgentConfig.json"
+    destination = "/tmp/cloundWatchAgentConfig.json"
   }
 
   provisioner "shell" {
     script = "dependency.sh"
   }
 
+
   provisioner "shell" {
     script = "appSetup.sh"
+  }
+
+  provisioner "shell" {
+    script = "cloudWatchAgent.sh"
   }
 
 }

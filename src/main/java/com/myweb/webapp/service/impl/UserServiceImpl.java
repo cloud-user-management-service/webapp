@@ -29,11 +29,13 @@ import lombok.extern.log4j.Log4j2;
 public class UserServiceImpl implements UserService {
     private UserRepository userRepo;
     private PasswordEncoder passwordEncoder;
+    private MetricsServiceImpl metricsService;
 
-    @Autowired
-    public UserServiceImpl(UserRepository userRepo, PasswordEncoder passwordEncoder) {
+    // @Autowired
+    public UserServiceImpl(UserRepository userRepo, PasswordEncoder passwordEncoder, MetricsServiceImpl metricsService) {
         this.userRepo = userRepo;
         this.passwordEncoder = passwordEncoder;
+        this.metricsService = metricsService;
     }
 
     @Override
@@ -61,11 +63,15 @@ public class UserServiceImpl implements UserService {
         user.setAccountCreated(LocalDateTime.now());
         user.setAccountUpdated(LocalDateTime.now());
 
+        long startDB = System.currentTimeMillis();
         try {
-            return userRepo.save(user);
+            User savedUser = userRepo.save(user); // Save the user
+            long durationDB = System.currentTimeMillis() - startDB; // Calculate duration
+            metricsService.recordDatabaseQuery("create_user", durationDB); // Record duration
+            return savedUser; // Return the saved user
         } catch (DataAccessException e) {
             log.error("Database error when saving user: {}", e.getMessage());
-            throw new DatabaseAccessException();
+            throw new DatabaseAccessException(); // Throw custom exception
         }
     }
 
@@ -99,8 +105,21 @@ public class UserServiceImpl implements UserService {
 
         // If any allowed field was updated, update account_updated and save the user
         if (updated) {
-            currentUser.setAccountUpdated(LocalDateTime.now());
-            userRepo.save(currentUser);
+            currentUser.setAccountUpdated(LocalDateTime.now()); // Update the account timestamp
+
+            long startDB = System.currentTimeMillis(); 
+            try {
+                userRepo.save(currentUser); 
+                long durationDB = System.currentTimeMillis() - startDB; 
+                metricsService.recordDatabaseQuery("update_user", durationDB); 
+
+                log.info("User saved in {} ms", durationDB); 
+                // record the duration
+            } catch (DataAccessException e) {
+                log.error("Database error when saving user: {}", e.getMessage());
+                throw new DatabaseAccessException(); // Handle exception appropriately
+            }
+
             return new ResponseEntity<>(HttpStatus.NO_CONTENT); // No content on success
         }
 

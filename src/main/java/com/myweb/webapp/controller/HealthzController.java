@@ -17,6 +17,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.myweb.webapp.exceptions.DbConnectionException;
 import com.myweb.webapp.exceptions.UnallowedPayloadException;
+import com.myweb.webapp.service.MetricsService;
+import com.myweb.webapp.service.impl.MetricsServiceImpl;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,9 +31,17 @@ public class HealthzController {
     @Autowired
     private DataSource dataSource;
 
+    private MetricsService metricsService;
+
+    public HealthzController(MetricsService metricsService) {
+        this.metricsService = metricsService;
+    }
+
     // health check api
     @GetMapping("/healthz")
     public ResponseEntity healthz(HttpServletRequest request, HttpServletResponse response) {
+        long start = System.currentTimeMillis();
+
         log.info("Health check Api is called");
 
         // check if database connection is successful, if not, return error
@@ -68,6 +78,9 @@ public class HealthzController {
         response.setHeader("Pragma", "no-cache");
         response.setHeader("X-Content-Type-Options", "nosniff");
         log.info("Health check Api is healthy");
+
+        long duration = System.currentTimeMillis() - start;
+        metricsService.recordApiCall("healthz", duration);
 
         return ResponseEntity.ok().build();
     }
