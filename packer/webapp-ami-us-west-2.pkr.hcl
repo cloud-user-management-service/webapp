@@ -116,12 +116,12 @@ build {
 
 
   provisioner "file" {
-    source = "app.service"
+    source      = "app.service"
     destination = "/tmp/app.service"
   }
 
   provisioner "file" {
-    source = "cloundWatchAgentConfig.json"
+    source      = "cloundWatchAgentConfig.json"
     destination = "/tmp/cloundWatchAgentConfig.json"
   }
 
