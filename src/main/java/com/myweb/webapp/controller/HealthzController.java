@@ -1,6 +1,7 @@
 package com.myweb.webapp.controller;
 
 
+import java.sql.Connection;
 import java.util.Map;
 
 import javax.sql.DataSource;
@@ -45,11 +46,11 @@ public class HealthzController {
         log.info("Health check Api is called");
 
         // check if database connection is successful, if not, return error
-        try {
-            dataSource.getConnection();
+        try (Connection connection = dataSource.getConnection()) {
+            // dataSource.getConnection();
             log.info("Successfully connected to MySQL database!");
         } catch (Exception e) {
-            log.info("Error: Failed to connect to MySQL database!");
+            log.info("Error: Failed to connect to MySQL database! Error message: ", e);
             throw new DbConnectionException();
         }
 
