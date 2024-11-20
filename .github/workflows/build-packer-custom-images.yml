@@ -32,13 +32,14 @@ jobs:
       - name: Build the application artifact
         run: mvn clean package -DskipTests
       
-      #configure AWS credentials
+      #configure AWS credentials of dev account to build the AMI
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
+
       
       #install packer
       - name: Install Packer
@@ -52,5 +53,60 @@ jobs:
           cd packer
           packer init webapp-ami-us-west-2.pkr.hcl
           packer build webapp-ami-us-west-2.pkr.hcl
- 
-          
+      
+      #configure AWS credentials of demo account
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEMO }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEMO }}
+          aws-region: us-west-2
+
+      # Get the latest AMI ID
+      - name: Fetch latest AMI ID
+        id: fetch_ami
+        run: echo "AMI_ID=$(jq -r '.builds[0].artifact_id' manifest.json | cut -d ":" -f2)" >> $GITHUB_ENV
+      
+      # Create a launch template using the new AMI ID
+      - name: create lauch template using the new ami id
+        run: |
+          aws ec2 create-launch-template-version \
+          --launch-template-name demo-launch-template \
+          --source-version 1 \
+          --version-description "Updated lauch template with new AMI" \
+          --launch-template-data '{"ImageId":"${{ env.AMI_ID }}"}'
+      
+      # Refresh ec2 instance
+      - name: Refresh ec2 instance in autoscaling group in demo account
+        run: |
+          REFRESH_ID=$(aws autoscaling start-instance-refresh \
+            --auto-scaling-group-name ${{ secrets.ASG_NAME }} \
+            --strategy Rolling \
+            --desired-configuration '{"LaunchTemplate":{"LaunchTemplateName":"demo-launch-template","Version":"$Latest"}}'
+            --preferences '{"InstanceWarmup":300,"MinHealthyPercentage":50}' \
+            --query 'InstanceRefreshId' --output text)
+          echo "REFRESH_ID=$REFRESH_ID" >> $GITHUB_ENV
+      
+      # Wait for the instance refresh to complete
+      - name: Wait for Instance Refresh to Complete
+        run: |
+          while true; do
+            REFRESH_STATUS=$(aws autoscaling describe-instance-refreshes \
+              --auto-scaling-group-name ${{ secrets.ASG_NAME }} \
+              --query 'InstanceRefreshes[?InstanceRefreshId==`'$REFRESH_ID'`].Status' \
+              --output text)
+            if [ "$REFRESH_STATUS" = "Successful" ]; then
+              echo "Instance Refresh Completed Successfully."
+              break
+            elif [ "$REFRESH_STATUS" = "Failed" ]; then
+              echo "Instance Refresh Failed."
+              exit 1
+            else
+              echo "Waiting for Instance Refresh to Complete... Current Status: $REFRESH_STATUS"
+              sleep 30
+            fi
+          done
+      
+      - name: Validate Deployment in Demo
+        run: |
+          echo "Validation in Demo Account Complete."

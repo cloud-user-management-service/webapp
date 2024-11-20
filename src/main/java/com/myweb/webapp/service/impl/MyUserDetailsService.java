@@ -10,6 +10,8 @@ import com.myweb.webapp.entity.User;
 import com.myweb.webapp.repository.UserRepository;
 import com.myweb.webapp.service.MetricsService;
 
+import org.springframework.security.authentication.DisabledException;
+
 
 @Service
 public class MyUserDetailsService implements UserDetailsService {    
@@ -31,6 +33,11 @@ public class MyUserDetailsService implements UserDetailsService {
         if (user == null) {
             throw new UsernameNotFoundException("Username does not exist");
         }
+
+        if (!user.isVerificationStatus()) {
+            throw new DisabledException("User email is not verified"); 
+        }
+
         String password = user.getPassword();
         return new CustomUserDetails(user, password);
 

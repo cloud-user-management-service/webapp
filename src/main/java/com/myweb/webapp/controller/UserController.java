@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,8 +13,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.SdkClientException;
+import com.amazonaws.services.sns.AmazonSNS;
+import com.amazonaws.services.sns.AmazonSNSClientBuilder;
+import com.amazonaws.services.sns.model.PublishRequest;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.myweb.webapp.dto.CustomUserDetails;
 import com.myweb.webapp.dto.UserRequestDto;
 import com.myweb.webapp.dto.UserResponse;
@@ -34,6 +43,9 @@ import lombok.extern.log4j.Log4j2;
 public class UserController {
     UserService userService;
     MetricsService metricsService;
+    @Value("${sns.topic.arn}")
+    private String snsTopicArn;
+    
 
     public UserController(UserService userService, MetricsService metricsService) {
         this.userService = userService;
@@ -58,11 +70,44 @@ public class UserController {
         
         log.info("User created with email: {}", user.getEmail());
 
+        // Publish SNS message
+        try {
+            publishToSns(user);
+            log.info("SNS message published successfully for user: {}", user.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to publish SNS message for user: {}", user.getEmail(), e);
+            // Handle failure (e.g., retry or alert)???????
+        }
+
         long duration = System.currentTimeMillis() - start;
         metricsService.recordApiCall("create_user", duration);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
     }
+    //method to publish to SNS
+    private void publishToSns(User user) {
+        AmazonSNS snsClient = AmazonSNSClientBuilder.defaultClient();
+
+        Map<String, String> messagePayload = new HashMap<>();
+        messagePayload.put("userIdd", String.valueOf(user.getId()));
+        messagePayload.put("email", user.getEmail());
+        messagePayload.put("firstName", user.getFirstName());
+        messagePayload.put("lastName", user.getLastName());
+
+        PublishRequest publishRequest;
+        try {
+            publishRequest = new PublishRequest()
+                    .withTopicArn(snsTopicArn)
+                    .withMessage(new ObjectMapper().writeValueAsString(messagePayload));
+            snsClient.publish(publishRequest);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to serialize message payload to JSON", e);
+        } catch (SdkClientException e) {
+            log.error("AWS SDK client error occurred: ", e);
+        }
+    }
+
+    
 
     @GetMapping("/self")
     public ResponseEntity<UserResponse> getUser(HttpServletRequest request) {

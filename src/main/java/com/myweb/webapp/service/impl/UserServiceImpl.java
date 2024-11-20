@@ -1,5 +1,6 @@
 package com.myweb.webapp.service.impl;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 import java.util.Map;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -30,9 +32,12 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepo;
     private PasswordEncoder passwordEncoder;
     private MetricsServiceImpl metricsService;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     // @Autowired
-    public UserServiceImpl(UserRepository userRepo, PasswordEncoder passwordEncoder, MetricsServiceImpl metricsService) {
+    public UserServiceImpl(UserRepository userRepo, PasswordEncoder passwordEncoder,
+            MetricsServiceImpl metricsService) {
         this.userRepo = userRepo;
         this.passwordEncoder = passwordEncoder;
         this.metricsService = metricsService;
@@ -107,13 +112,13 @@ public class UserServiceImpl implements UserService {
         if (updated) {
             currentUser.setAccountUpdated(LocalDateTime.now()); // Update the account timestamp
 
-            long startDB = System.currentTimeMillis(); 
+            long startDB = System.currentTimeMillis();
             try {
-                userRepo.save(currentUser); 
-                long durationDB = System.currentTimeMillis() - startDB; 
-                metricsService.recordDatabaseQuery("update_user", durationDB); 
+                userRepo.save(currentUser);
+                long durationDB = System.currentTimeMillis() - startDB;
+                metricsService.recordDatabaseQuery("update_user", durationDB);
 
-                log.info("User saved in {} ms", durationDB); 
+                log.info("User saved in {} ms", durationDB);
                 // record the duration
             } catch (DataAccessException e) {
                 log.error("Database error when saving user: {}", e.getMessage());
@@ -153,5 +158,7 @@ public class UserServiceImpl implements UserService {
             throw new ParamException();
         }
     }
+
+
 
 }
