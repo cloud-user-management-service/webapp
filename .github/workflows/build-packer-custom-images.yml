@@ -71,7 +71,7 @@ jobs:
       - name: create lauch template using the new ami id
         run: |
           aws ec2 create-launch-template-version \
-          --launch-template-name demo-launch-template \
+          --launch-template-name webapp_launch_template \
           --source-version 1 \
           --version-description "Updated lauch template with new AMI" \
           --launch-template-data '{"ImageId":"${{ env.AMI_ID }}"}'
@@ -82,7 +82,7 @@ jobs:
           REFRESH_ID=$(aws autoscaling start-instance-refresh \
             --auto-scaling-group-name ${{ secrets.ASG_NAME }} \
             --strategy Rolling \
-            --desired-configuration '{"LaunchTemplate":{"LaunchTemplateName":"demo-launch-template","Version":"$Latest"}}'
+            --desired-configuration '{"LaunchTemplate":{"LaunchTemplateName":"webapp_launch_template","Version":"$Latest"}}'
             --preferences '{"InstanceWarmup":300,"MinHealthyPercentage":50}' \
             --query 'InstanceRefreshId' --output text)
           echo "REFRESH_ID=$REFRESH_ID" >> $GITHUB_ENV
