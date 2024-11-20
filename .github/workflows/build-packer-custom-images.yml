@@ -62,10 +62,23 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEMO }}
           aws-region: us-west-2
 
-      # Get the latest AMI ID
-      - name: Fetch latest AMI ID
+      # # Get the latest AMI ID
+      # - name: Fetch latest AMI ID
+      #   id: fetch_ami
+      #   run: echo "AMI_ID=$(jq -r '.builds[0].artifact_id' manifest.json | cut -d ":" -f2)" >> $GITHUB_ENV
+
+      # Fetch the latest AMI ID based on the custom naming pattern
+      - name: Fetch the latest AMI ID
         id: fetch_ami
-        run: echo "AMI_ID=$(jq -r '.builds[0].artifact_id' manifest.json | cut -d ":" -f2)" >> $GITHUB_ENV
+        run: |
+          AMI_ID=$(aws ec2 describe-images \
+            --filters "Name=name,Values=csye6225_f24_webapp_*" \
+            --query "Images | sort_by(@, &CreationDate) | [-1].ImageId" \
+            --output text)
+          
+          echo "Latest AMI ID: $AMI_ID"
+          
+          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
       
       # Create a launch template using the new AMI ID
       - name: create lauch template using the new ami id
