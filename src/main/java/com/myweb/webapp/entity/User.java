@@ -48,4 +48,8 @@ public class User {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Column(name = "account_updated")
     private LocalDateTime accountUpdated;
+
+    // @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @Column(name = "verifaication_status")
+    private boolean verificationStatus;
 }
