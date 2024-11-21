@@ -43,6 +43,7 @@ import lombok.extern.log4j.Log4j2;
 public class UserController {
     UserService userService;
     MetricsService metricsService;
+    
     @Value("${sns.topic.arn}")
     private String snsTopicArn;
     
@@ -87,7 +88,6 @@ public class UserController {
     }
     //method to publish to SNS
     private void publishToSns(User user) {
-        log.info("sns topic arn", snsTopicArn);
         AmazonSNS snsClient = AmazonSNSClientBuilder.defaultClient();
 
         Map<String, String> messagePayload = new HashMap<>();
@@ -106,8 +106,8 @@ public class UserController {
             log.error("Failed to serialize message payload to JSON", e);
             throw new AmazonServiceException("Failed to serialize message payload to JSON", e);
         } catch (Exception e) {
-            log.error("Unexpected error occurred while publishing to sns", e);
-            throw e;
+            log.error("Unexpected error occurred: ", e);
+            throw new AmazonServiceException("Unexpected error occurred", e);
         }
     }
 
