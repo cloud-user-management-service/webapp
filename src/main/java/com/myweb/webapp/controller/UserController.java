@@ -78,7 +78,7 @@ public class UserController {
         } catch (Exception e) {
             log.error("Failed to publish SNS message for user: {}", user.getEmail(), e);
             // Handle failure (e.g., retry or alert)???????
-            throw new AmazonServiceException("Failed to publish SNS message for user: " + user.getEmail(), e);
+            // throw new AmazonServiceException("Failed to publish SNS message for user: " + user.getEmail(), e);
         }
 
         long duration = System.currentTimeMillis() - start;
@@ -104,10 +104,10 @@ public class UserController {
             snsClient.publish(publishRequest);
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize message payload to JSON", e);
-            throw new AmazonServiceException("Failed to serialize message payload to JSON", e);
+            // throw new AmazonServiceException("Failed to serialize message payload to JSON", e);
         } catch (Exception e) {
             log.error("Unexpected error occurred: ", e);
-            throw new AmazonServiceException("Unexpected error occurred", e);
+            // throw new AmazonServiceException("Unexpected error occurred", e);
         }
     }
 
