@@ -74,6 +74,7 @@ public class UserController {
 
         // Publish SNS message
         try {
+            log.info("snsTopicArn: {}", snsTopicArn);
             publishToSns(user);
             log.info("SNS message published successfully for user: {}", user.getEmail());
         } catch (Exception e) {
