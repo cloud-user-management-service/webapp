@@ -43,6 +43,7 @@ import lombok.extern.log4j.Log4j2;
 public class UserController {
     UserService userService;
     MetricsService metricsService;
+    AmazonSNS snsClient;
     @Value("${sns.topic.arn}")
     private String snsTopicArn;
     
@@ -77,6 +78,7 @@ public class UserController {
         } catch (Exception e) {
             log.error("Failed to publish SNS message for user: {}", user.getEmail(), e);
             // Handle failure (e.g., retry or alert)???????
+            throw new AmazonServiceException("Failed to publish SNS message for user: " + user.getEmail(), e);
         }
 
         long duration = System.currentTimeMillis() - start;
@@ -86,10 +88,11 @@ public class UserController {
     }
     //method to publish to SNS
     private void publishToSns(User user) {
-        AmazonSNS snsClient = AmazonSNSClientBuilder.defaultClient();
+        log.info("sns topic arn", snsTopicArn);
+        snsClient = AmazonSNSClientBuilder.defaultClient();
 
         Map<String, String> messagePayload = new HashMap<>();
-        messagePayload.put("userIdd", String.valueOf(user.getId()));
+        messagePayload.put("userId", String.valueOf(user.getId()));
         messagePayload.put("email", user.getEmail());
         messagePayload.put("firstName", user.getFirstName());
         messagePayload.put("lastName", user.getLastName());
@@ -102,8 +105,10 @@ public class UserController {
             snsClient.publish(publishRequest);
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize message payload to JSON", e);
-        } catch (SdkClientException e) {
-            log.error("AWS SDK client error occurred: ", e);
+            throw new AmazonServiceException("Failed to serialize message payload to JSON", e);
+        } catch (Exception e) {
+            log.error("Unexpected error occurred while publishing to sns", e);
+            throw e;
         }
     }
 
