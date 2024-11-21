@@ -43,7 +43,6 @@ import lombok.extern.log4j.Log4j2;
 public class UserController {
     UserService userService;
     MetricsService metricsService;
-    AmazonSNS snsClient;
     @Value("${sns.topic.arn}")
     private String snsTopicArn;
     
@@ -89,7 +88,7 @@ public class UserController {
     //method to publish to SNS
     private void publishToSns(User user) {
         log.info("sns topic arn", snsTopicArn);
-        snsClient = AmazonSNSClientBuilder.defaultClient();
+        AmazonSNS snsClient = AmazonSNSClientBuilder.defaultClient();
 
         Map<String, String> messagePayload = new HashMap<>();
         messagePayload.put("userId", String.valueOf(user.getId()));
