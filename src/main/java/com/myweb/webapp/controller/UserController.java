@@ -21,6 +21,7 @@ import com.amazonaws.SdkClientException;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClientBuilder;
 import com.amazonaws.services.sns.model.PublishRequest;
+import com.amazonaws.services.sns.model.PublishResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.myweb.webapp.dto.CustomUserDetails;
@@ -101,7 +102,8 @@ public class UserController {
             publishRequest = new PublishRequest()
                     .withTopicArn(snsTopicArn)
                     .withMessage(new ObjectMapper().writeValueAsString(messagePayload));
-            snsClient.publish(publishRequest);
+            PublishResult result = snsClient.publish(publishRequest);
+            log.info("Message published to SNS with message ID: {}", result.getMessageId());
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize message payload to JSON", e);
             // throw new AmazonServiceException("Failed to serialize message payload to JSON", e);
