@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "EmailVerification")
 public class EmailVerification {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Column(name = "id")
     private UUID id;
