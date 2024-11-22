@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.myweb.webapp.dto.CustomUserDetails;
 import com.myweb.webapp.entity.User;
+import com.myweb.webapp.exceptions.UserNotVerifiedException;
 import com.myweb.webapp.repository.UserRepository;
 import com.myweb.webapp.service.MetricsService;
 
@@ -35,8 +36,8 @@ public class MyUserDetailsService implements UserDetailsService {
         }
 
         if (!user.isVerificationStatus()) {
-            throw new DisabledException("User email is not verified"); 
-        }
+            throw new UserNotVerifiedException("User email is not verified");
+        }   
 
         String password = user.getPassword();
         return new CustomUserDetails(user, password);
