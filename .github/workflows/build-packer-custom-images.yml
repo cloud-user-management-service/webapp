@@ -62,17 +62,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEMO }}
           aws-region: us-west-2
 
-      # # Get the latest AMI ID
-      # - name: Fetch latest AMI ID
-      #   id: fetch_ami
-      #   run: echo "AMI_ID=$(jq -r '.builds[0].artifact_id' manifest.json | cut -d ":" -f2)" >> $GITHUB_ENV
-
-      # Fetch the latest AMI ID based on the custom naming pattern
       - name: Fetch the latest AMI ID
         id: fetch_ami
         run: |
           AMI_ID=$(aws ec2 describe-images \
-            --filters "Name=name,Values=csye6225_f24_webapp_*" \
+            --filters "Name=name,Values=${{ secrets.AMI_NAME_PREFIX }}*" \
             --query "Images | sort_by(@, &CreationDate) | [-1].ImageId" \
             --output text)
           
@@ -84,7 +78,7 @@ jobs:
       - name: create lauch template using the new ami id
         run: |
           aws ec2 create-launch-template-version \
-          --launch-template-name csye6225_asg \
+          --launch-template-name ${{ secrets.LAUNCH_TEMPLATE_NAME }} \
           --source-version 1 \
           --version-description "Updated lauch template with new AMI" \
           --launch-template-data '{"ImageId":"${{ env.AMI_ID }}"}'
@@ -96,7 +90,7 @@ jobs:
           REFRESH_ID=$(aws autoscaling start-instance-refresh \
             --auto-scaling-group-name ${{ secrets.ASG_NAME }} \
             --strategy Rolling \
-            --desired-configuration '{"LaunchTemplate":{"LaunchTemplateName":"csye6225_asg","Version":"$Latest"}}' \
+            --desired-configuration '{"LaunchTemplate":{"LaunchTemplateName":"${{ secrets.LAUNCH_TEMPLATE_NAME }}","Version":"$Latest"}}' \
             --preferences '{"InstanceWarmup":300,"MinHealthyPercentage":50}' \
             --query 'InstanceRefreshId' --output text)
           echo "REFRESH_ID=$REFRESH_ID" >> $GITHUB_ENV
