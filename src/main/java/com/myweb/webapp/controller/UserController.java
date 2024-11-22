@@ -79,7 +79,7 @@ public class UserController {
             log.info("SNS message published successfully for user: {}", user.getEmail());
         } catch (Exception e) {
             log.error("Failed to publish SNS message for user: {}", user.getEmail(), e);
-            // Handle failure (e.g., retry or alert)???????
+            
             // throw new AmazonServiceException("Failed to publish SNS message for user: " + user.getEmail(), e);
         }
 

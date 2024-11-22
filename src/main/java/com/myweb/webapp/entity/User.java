@@ -49,7 +49,7 @@ public class User {
     @Column(name = "account_updated")
     private LocalDateTime accountUpdated;
 
-    // @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Column(name = "verifaication_status")
     private boolean verificationStatus;
 }
