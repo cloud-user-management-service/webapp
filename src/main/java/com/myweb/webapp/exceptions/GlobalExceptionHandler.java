@@ -100,5 +100,10 @@ public class GlobalExceptionHandler{
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
     }
 
+    @ExceptionHandler(UserNotVerifiedException.class)
+    public ResponseEntity<String> handleUserNotVerifiedException(UserNotVerifiedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+    }
+
 
 }

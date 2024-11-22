@@ -89,17 +89,6 @@ jobs:
           --version-description "Updated lauch template with new AMI" \
           --launch-template-data '{"ImageId":"${{ env.AMI_ID }}"}'
       
-      # # Refresh ec2 instance
-      # - name: Refresh ec2 instance in autoscaling group in demo account
-      #   run: |
-      #     REFRESH_ID=$(aws autoscaling start-instance-refresh \
-      #       --auto-scaling-group-name \
-      #       --strategy Rolling \
-      #       --desired-configuration '{"LaunchTemplate":{"LaunchTemplateName":"csye6225_asg","Version":"$Latest"}}'
-      #       --preferences '{"InstanceWarmup":300,"MinHealthyPercentage":50}' \
-      #       --query 'InstanceRefreshId' --output text)
-      #     echo "REFRESH_ID=$REFRESH_ID" >> $GITHUB_ENV
-
       - name: Refresh EC2 instance in AutoScaling Group
         run: |
           echo "ASG_NAME=${{ secrets.ASG_NAME }}"
