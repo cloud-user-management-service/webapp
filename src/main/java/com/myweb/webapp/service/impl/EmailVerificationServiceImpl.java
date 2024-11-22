@@ -20,19 +20,19 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     private EmailVerification emailVerification;
     private UserRepository userRepo;
 
-    public EmailVerificationServiceImpl(EmailVerificationRepository emailVerificationRepository) {   
+    public EmailVerificationServiceImpl(EmailVerificationRepository emailVerificationRepository, UserRepository userRepo) {   
         this.emailVerificationRepo = emailVerificationRepository;
+        this.userRepo = userRepo;
     }
 
     public boolean verifyToken(String email, String token) {
         // search for the token in the database
         emailVerification = emailVerificationRepo.findByToken(token)
                 .orElse(null);
-        log.info("EmailVerification: " + emailVerification);
         User user = userRepo.findByEmail(email);
-        log.info("User: " + user);
+        // if the token is not found or the user is already verified, return false
         if (emailVerification == null || user.isVerificationStatus()) {
-            return false; // if the token is not found or the user is already verified, return false
+            return false; 
         }
 
         // Check if the token has expired
