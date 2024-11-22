@@ -36,7 +36,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         // Skip authentication for health check and user registration
         String requestURI = request.getRequestURI();
         
-        if (requestURI.equals("/v1/user") || requestURI.equals("/healthz")) {
+        if (requestURI.equals("/v1/user") || requestURI.equals("/healthz") || requestURI.equals("/v1/user/verify")) {
             filterChain.doFilter(request, response); 
             return; 
         }
