@@ -25,10 +25,13 @@ public class EmailVerificationController {
     
     @GetMapping("/verify")
     public ResponseEntity<String> verifyEmail(@RequestParam String email, @RequestParam String token) {
+        log.info("Verifying email: {}", email);
         boolean isVerified = emailVerificationService.verifyToken(email, token);
+        log.info("Email verification status: {}", isVerified);
         if (isVerified) {
             return ResponseEntity.ok("Email successfully verified.");
         } else {
+            log.error("Verification link is invalid or expired.");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Verification link is invalid or expired.");
         }
     }
