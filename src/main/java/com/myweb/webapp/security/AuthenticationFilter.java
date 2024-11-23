@@ -75,7 +75,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                 }
             } catch (Exception e) {
                 log.error("Error processing authentication", e);
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 return;
             }
         } else {
