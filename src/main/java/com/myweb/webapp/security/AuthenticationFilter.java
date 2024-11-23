@@ -9,9 +9,12 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.myweb.webapp.exceptions.UserNotVerifiedException;
 
 import java.util.Base64;
 
@@ -73,9 +76,17 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     return;
                 }
+            } catch (UsernameNotFoundException e) {
+                log.error("Error processing authentication, username not found", e);
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            } catch (UserNotVerifiedException e) {
+                log.error("Error processing authentication, unverified user", e);
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                return;
             } catch (Exception e) {
                 log.error("Error processing authentication", e);
-                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }
         } else {
