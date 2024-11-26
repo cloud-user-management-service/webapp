@@ -43,6 +43,7 @@ public class SecurityConfig {
                 .requestMatchers("/healthz").permitAll() // Allow access to /healthz without authentication
                 .requestMatchers("/v1/user").permitAll() // Allow access to /v1/user without authentication
                 .requestMatchers("/v1/user/verify").permitAll() // Allow access to /v1/user/verify without authentication
+                .requestMatchers("/cicd").permitAll()
                 .requestMatchers("/swagger-ui/**").permitAll() 
                 .requestMatchers("/v3/api-docs/**").permitAll() 
                 .anyRequest().authenticated()             // All other requests require authentication
