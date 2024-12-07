@@ -14,6 +14,6 @@ sudo systemctl enable csye6225
 
 sudo chown -R csye6225:csye6225 /opt/myapp
 sudo chown -R csye6225:csye6225 /var/log/statsd
-#permission?
+
 
 #AWS_CA_BUNDLE=/User/tejas.parikh/Cloudflare_CA.pem AWS_PROFILE=neu packer build aws.par.hcl 
